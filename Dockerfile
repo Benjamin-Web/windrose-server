@@ -17,11 +17,10 @@ RUN apt-get update && apt-get install -y \
     lib32gcc-s1 \
     lib32stdc++6 \
     lib32z1 \
-    lib32zstd1 \
     lib32ncurses6 \
     lib32tinfo6 \
     curl \
-    netcat \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 # SteamCMD installieren
