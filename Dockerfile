@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
 # SteamCMD installieren
 RUN mkdir -p /steamcmd && \
     cd /steamcmd && \
-    wget -q https://steamcdn-a.akamaihd.net/client/installer/steamcmd.tar.gz && \
+    curl -sL https://steamcdn-a.akamaihd.net/client/installer/steamcmd.tar.gz -o steamcmd.tar.gz && \
     tar -xzf steamcmd.tar.gz && \
     rm steamcmd.tar.gz && \
     chmod +x steamcmd.sh
