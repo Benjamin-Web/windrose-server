@@ -1,13 +1,15 @@
 # Windrose Dedicated Server Dockerfile
 # App ID: 3041230
+# 
+# Verwendet: vaporapi/steamcmd - aktuelles SteamCMD Image
 
-FROM cm2network/steamcmd:latest
+FROM vaporapi/steamcmd:latest
 
 LABEL maintainer="Benjamin"
 LABEL steam.app_id="3041230"
 
 # Windrose installieren
-RUN ./steamcmd/steamcmd.sh \
+RUN ./steamcmd.sh \
     +force_install_dir /windrose \
     +login anonymous \
     +app_update 3041230 \
