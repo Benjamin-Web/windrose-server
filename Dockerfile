@@ -24,12 +24,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # SteamCMD installieren
-RUN mkdir -p /steamcmd && \
+RUN apt-get update && apt-get install -y steamcmd 2>/dev/null || \
+    (mkdir -p /steamcmd && \
     cd /steamcmd && \
     curl -sL https://steamcdn-a.akamaihd.net/client/installer/steamcmd.tar.gz -o steamcmd.tar.gz && \
     tar -xzf steamcmd.tar.gz && \
     rm steamcmd.tar.gz && \
-    chmod +x steamcmd.sh
+    chmod +x steamcmd.sh)
 
 # Windrose Server installieren (App ID 3041230)
 RUN /steamcmd/steamcmd.sh \
