@@ -25,17 +25,33 @@ docker build -t windrose-server .
 
 ### 2. Spieldateien beschaffen
 
-**Option A: Auf dem Server mit SteamCMD (ohne Docker)**
+**Option A: Throwaway-Container (Empfohlen)**
 
 ```bash
-# SteamCMD direkt auf dem Server installieren
-apt install steamcmd
-
-# Windrose Server herunterladen
-mkdir -p ~/windrose-server-files
-cd ~/windrose-server-files
-steamcmd +force_install_dir . +login anonymous +app_update 3041230 validate +quit
+cd ~/windrose-server
+docker run --rm -it -v $(pwd)/server-data:/data cm2network/steamcmd bash
 ```
+
+**Dann im Container:**
+```bash
+./steamcmd.sh +force_install_dir /data +login DEIN_STEAM_USERNAME +app_update 3041230 validate +quit
+```
+
+> SteamCMD wird nach deinem Passwort und ggf. Steam Guard Code fragen.
+
+**Nach dem Download:**
+```bash
+exit
+```
+
+**Dann Rechte anpassen:**
+```bash
+sudo chown -R 1000:1000 server-data/
+```
+
+---
+
+**Option B: Lokal auf Windows-PC**
 
 **Option B: Lokal auf Windows-PC**
 
