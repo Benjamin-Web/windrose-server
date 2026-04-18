@@ -6,19 +6,16 @@ FROM cm2network/steamcmd:latest
 LABEL maintainer="Benjamin"
 LABEL steam.app_id="3041230"
 
-# KEINE Spieldownloads im Build! Das passiert zur Laufzeit.
+# Verzeichnisse im Home-Verzeichnis erstellen (User "steam" hat Schreibrechte)
+RUN mkdir -p /home/steam/windrose/saved /home/steam/windrose/logs
 
-# Verzeichnisse erstellen
-RUN mkdir -p /windrose/saved /windrose/logs
-RUN chmod -R 755 /windrose
-
-# Spieldateien werden beim Start heruntergeladen/aktualisiert
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+# Start-Skript kopieren
+COPY start.sh /home/steam/start.sh
+RUN chmod +x /home/steam/start.sh
 
 # Ports
 EXPOSE 7777/udp 27015/tcp
 
-WORKDIR /windrose
+WORKDIR /home/steam/windrose
 
-ENTRYPOINT ["/start.sh"]
+ENTRYPOINT ["/home/steam/start.sh"]

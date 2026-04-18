@@ -2,7 +2,7 @@
 set -e
 
 STEAMCMD="/home/steam/steamcmd/steamcmd.sh"
-SERVER_DIR="/windrose"
+SERVER_DIR="/home/steam/windrose"
 APP_ID="3041230"
 
 echo "[Windrose] Starte Server-Setup..."
@@ -26,8 +26,6 @@ if [ ! -f "${SERVER_DIR}/WindroseServer.sh" ]; then
     echo "[Windrose] Installation abgeschlossen."
 else
     echo "[Windrose] Server bereits installiert."
-    
-    # Optional: Check for Updates
     echo "[Windrose] Prüfe auf Updates..."
     ${STEAMCMD} +force_install_dir ${SERVER_DIR} ${LOGIN_CMD} +app_update ${APP_ID} +quit
 fi

@@ -16,8 +16,8 @@ services:
       - STEAM_USER=DEIN_STEAM_USERNAME
       - STEAM_PASS=DEIN_STEAM_PASSWORT
     volumes:
-      - ./server-data:/windrose/saved
-      - ./logs:/windrose/logs
+      - ./server-data:/home/steam/windrose/saved
+      - ./logs:/home/steam/windrose/logs
     deploy:
       resources:
         limits:
