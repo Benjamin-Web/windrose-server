@@ -8,8 +8,8 @@ APP_ID="3041230"
 echo "[Windrose] Starte Server-Setup..."
 
 # Login-Methode: anonymous oder mit Account
-if [ -n "${STEAM_USER}" ] && [ -n "${STEAM_PASS}" ]; then
-    LOGIN_CMD="+login ${STEAM_USER} ${STEAM_PASS}"
+if [ -n "${STEAM_USER}" ] && [ -n "${STEAM_PASSWORD}" ]; then
+    LOGIN_CMD="+login ${STEAM_USER} ${STEAM_PASSWORD}"
     echo "[Steam] Login mit Account: ${STEAM_USER}"
 else
     LOGIN_CMD="+login anonymous"
