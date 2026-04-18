@@ -7,12 +7,21 @@ APP_ID="3041230"
 
 echo "[Windrose] Starte Server-Setup..."
 
+# Login-Methode: anonymous oder mit Account
+if [ -n "${STEAM_USER}" ] && [ -n "${STEAM_PASS}" ]; then
+    LOGIN_CMD="+login ${STEAM_USER} ${STEAM_PASS}"
+    echo "[Steam] Login mit Account: ${STEAM_USER}"
+else
+    LOGIN_CMD="+login anonymous"
+    echo "[Steam] Login anonym..."
+fi
+
 # Prüfe ob Server schon installiert ist
 if [ ! -f "${SERVER_DIR}/WindroseServer.sh" ]; then
     echo "[Windrose] Server nicht gefunden. Installiere jetzt..."
     echo "[Windrose] Download kann 5-15 Minuten dauern..."
     
-    ${STEAMCMD} +force_install_dir ${SERVER_DIR} +login anonymous +app_update ${APP_ID} validate +quit
+    ${STEAMCMD} +force_install_dir ${SERVER_DIR} ${LOGIN_CMD} +app_update ${APP_ID} validate +quit
     
     echo "[Windrose] Installation abgeschlossen."
 else
@@ -20,7 +29,7 @@ else
     
     # Optional: Check for Updates
     echo "[Windrose] Prüfe auf Updates..."
-    ${STEAMCMD} +force_install_dir ${SERVER_DIR} +login anonymous +app_update ${APP_ID} +quit
+    ${STEAMCMD} +force_install_dir ${SERVER_DIR} ${LOGIN_CMD} +app_update ${APP_ID} +quit
 fi
 
 # Server starten

@@ -13,6 +13,8 @@ services:
       - SERVER_PORT=7777
       - QUERY_PORT=27015
       - MAX_PLAYERS=16
+      - STEAM_USER=DEIN_STEAM_USERNAME
+      - STEAM_PASS=DEIN_STEAM_PASSWORT
     volumes:
       - ./server-data:/windrose/saved
       - ./logs:/windrose/logs
