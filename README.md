@@ -1,95 +1,116 @@
 # Windrose Dedicated Server - Docker Setup
 
-## ⚠️ Voraussetzungen
+## 📋 Übersicht
 
-- Steam Account mit Windrose in der Bibliothek
-- **KEIN Steam Guard (2FA)** auf dem Server-Account (würde automatischen Login blockieren)
+Dieses Setup nutzt Docker, aber **ohne automatischen SteamCMD-Download**.
+Die Spieldateien werden manuell per FTP hochgeladen.
+
+**Vorteile:**
+- ✅ Kein Steam Account nötig
+- ✅ Kein Steam Guard Problem
+- ✅ Download auf eigenem PC (schneller)
+
+**Nachteil:**
+- ❌ Manuelle Updates bei Patches
 
 ## 🚀 Schnellstart
 
+### 1. Repo klonen & bauen
+
 ```bash
-# 1. Repo klonen
 git clone https://github.com/Benjamin-Web/windrose-server.git
 cd windrose-server
-
-# 2. .env Datei erstellen (Kopiere von .env.example)
-cp .env.example .env
-nano .env
-# Trage ein:
-# STEAM_USER=DeinSteamUsername
-# STEAM_PASSWORD=DeinSteamPasswort
-
-# 3. Docker Image bauen
 docker build -t windrose-server .
+```
 
-# 4. Server starten
+### 2. Spieldateien beschaffen
+
+**Option A: Auf dem Server mit SteamCMD (ohne Docker)**
+
+```bash
+# SteamCMD direkt auf dem Server installieren
+apt install steamcmd
+
+# Windrose Server herunterladen
+mkdir -p ~/windrose-server-files
+cd ~/windrose-server-files
+steamcmd +force_install_dir . +login anonymous +app_update 3041230 validate +quit
+```
+
+**Option B: Lokal auf Windows-PC**
+
+1. Steam Client öffnen
+2. "Tools" → "Dedicated Server" für Windrose suchen
+3. Download starten (oft unter `C:\Program Files\Steam\steamapps\common\`)
+4. Per FTP/SFTP die Dateien auf den Server in `~/windrose-server/server-data/` hochladen
+
+### 3. Rechte anpassen
+
+```bash
+# Im windrose-server Verzeichnis:
+sudo chown -R 1000:1000 server-data/
+```
+
+### 4. Server starten
+
+```bash
 docker compose up -d
-
-# 5. Logs beobachten (kann 5-15 Min beim ersten Mal dauern)
 docker compose logs -f
 ```
 
-## 🔐 Sicherheitshinweis
+## 📁 Verzeichnis-Struktur
 
-**Niemals** `.env` Dateien mit echten Credentials ins Repo pushen!
-
-Die `.env` ist bereits in `.gitignore` – sie wird nicht gepusht.
-
-Falls du mehrere Server-Instanzen betreibst, kannst du verschiedene `.env` Dateien nutzen:
-```bash
-docker compose --env-file .env.production up -d
+```
+windrose-server/
+├── server-data/          # <-- Hier kommen die Spieldateien rein
+│   ├── WindroseServer.sh  # <-- Die Start-Datei MUSS hier sein
+│   ├── Engine/
+│   ├── Game/
+│   └── ...
+├── logs/                 # Server-Logs
+├── docker-compose.yml
+├── Dockerfile
+└── start.sh
 ```
 
-## 📁 Wichtige Pfade im Container
+## 🔧 Konfiguration
 
-| Pfad | Beschreibung |
-|---|---|
-| `/home/steam/windrose` | Server-Installationsverzeichnis |
-| `/home/steam/windrose/saved` | Spielstände |
-| `/home/steam/windrose/logs` | Server-Logs |
-
-## 🔧 Konfiguration (.env)
+### Environment Variablen (docker-compose.yml)
 
 | Variable | Standard | Beschreibung |
 |---|---|---|
-| `STEAM_USER` | **(required)** | Steam Username |
-| `STEAM_PASSWORD` | **(required)** | Steam Passwort |
 | `SERVER_NAME` | `Windrose Server` | Name in der Serverliste |
 | `SERVER_PORT` | `7777` | Game Port (UDP) |
 | `QUERY_PORT` | `27015` | Steam Query Port |
 | `MAX_PLAYERS` | `16` | Max Spieler |
 
-## ⚡ Erster Start
+### Ports
 
-1. Docker Image bauen (wenige Sekunden)
-2. Container startet → erkennt dass keine Dateien da sind
-3. **Download der Spieldateien** (5-15 Minuten)
-4. Server startet automatisch
-
-Danach: `docker compose up -d` startet in Sekunden.
+| Port | Protokoll | Beschreibung |
+|---|---|---|
+| `7777` | UDP | Haupt-Spielport |
+| `7778` | UDP | Raw Packet Port |
+| `27015` | TCP | Steam Query Port |
 
 ## 🔄 Updates
 
-```bash
-docker compose down
-docker build --no-cache -t windrose-server .
-docker compose up -d
-docker compose logs -f
-```
+Wenn Windrose patches veröffentlicht:
 
-## 💾 Daten persistieren
+1. Server stoppen: `docker compose down`
+2. Lokal neuen Server über Steam downloaden
+3. Per FTP alte Dateien in `server-data/` überschreiben
+4. Server starten: `docker compose up -d`
 
-Spielstände werden in `./server-data` auf dem Host gespeichert.
+## 💾 Daten-Persistenz
+
+Spielstände werden in `./server-data/saved` gespeichert.
 
 ## ❓ Bekannte Probleme
 
-**"Invalid Password" Error:**
-→ Falsche Steam-Credentials in .env, oder Steam Guard (2FA) aktiv
+**"Keine Spieldateien gefunden":**
+→ Spieldateien wurden nicht nach `server-data/` hochgeladen oder falscher Dateiname
 
-**"Missing configuration" Error:**
-→ Account besitzt Windrose nicht
-
-**Server nicht in Serverliste sichtbar:**
+**Server nicht in Serverliste:**
 → Firewall Ports 7777/udp und 27015/tcp prüfen
 
 ## 🛠️ Hilfreiche Befehle
