@@ -9,8 +9,8 @@ LABEL steam.app_id="3041230"
 # Verzeichnisse im Home-Verzeichnis erstellen (User "steam" hat Schreibrechte)
 RUN mkdir -p /home/steam/windrose/saved /home/steam/windrose/logs
 
-# Start-Skript kopieren
-COPY start.sh /home/steam/start.sh
+# Start-Skript kopieren und Besitzer auf steam:steam
+COPY --chown=steam:steam start.sh /home/steam/start.sh
 RUN chmod +x /home/steam/start.sh
 
 # Ports
