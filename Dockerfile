@@ -1,14 +1,12 @@
 # Windrose Dedicated Server Dockerfile
 # App ID: 3041230
+#
+# Achtung: SteamCMD und Server werden BEIM START heruntergeladen
+# Das erste Starten dauert 10-30 Minuten!
 
 FROM ubuntu:22.04
 
-LABEL maintainer="Benjamin"
-LABEL steam.app_id="3041230"
-
 ENV DEBIAN_FRONTEND=noninteractive
-ENV STEAMCMD_DIR=/steamcmd
-ENV SERVER_DIR=/windrose
 
 # System-Pakete
 RUN apt-get update && \
@@ -28,54 +26,49 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# SteamCMD installieren
-RUN mkdir -p ${STEAMCMD_DIR} && \
-    cd ${STEAMCMD_DIR} && \
-    echo "=== Variante 1: SteamCDN ===" && \
-    curl -L "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip" -o steamcmd.zip && \
-    echo "Size: $(stat -c%s steamcmd.zip 2>/dev/null || echo '0')" && \
-    unzip -o steamcmd.zip && \
-    chmod +x steamcmd.sh
+# Verzeichnisse erstellen
+RUN mkdir -p /steamcmd /windrose/saved /windrose/logs
+RUN chmod -R 755 /steamcmd /windrose
 
-# Falls Variante 1 fehlschlug
-RUN cd ${STEAMCMD_DIR} && \
-    if [ ! -f steamcmd.sh ]; then \
-        echo "=== Variante 2: Repo.steampowered ===" && \
-        curl -L "https://repo.steampowered.com/steamcmd/steamcmd.zip" -o steamcmd.zip && \
-        unzip -o steamcmd.zip && \
-        chmod +x steamcmd.sh; \
-    fi
-
-# Falls immer noch nicht
-RUN cd ${STEAMCMD_DIR} && \
-    if [ ! -f steamcmd.sh ]; then \
-        echo "=== Variante 3: wget ===" && \
-        wget -q "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip" && \
-        unzip -o steamcmd.zip && \
-        chmod +x steamcmd.sh; \
-    fi
-
-# Windrose Server installieren
-RUN echo "=== Installiere Windrose Server ===" && \
-    ${STEAMCMD_DIR}/steamcmd.sh +force_install_dir ${SERVER_DIR} +login anonymous +app_update 3041230 validate +quit
-
-# Server-Verzeichnisse
-RUN mkdir -p ${SERVER_DIR}/saved ${SERVER_DIR}/logs && chmod -R 755 ${SERVER_DIR}
+# SteamCMD Installations-Script beim Start
+# Dieses Script wird nur beim ersten Start ausgeführt
+RUN printf '#!/bin/bash\n\
+set -e\n\
+echo "[SteamCMD] Prüfe Installation..."\n\
+if [ ! -f /steamcmd/steamcmd.sh ]; then\n\
+    echo "[SteamCMD] Installiere SteamCMD..."\n\
+    mkdir -p /steamcmd\n\
+    cd /steamcmd\n\
+    curl -L "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip" -o steamcmd.zip\n\
+    unzip -o steamcmd.zip\n\
+    rm -f steamcmd.zip\n\
+    chmod +x steamcmd.sh\n\
+    echo "[SteamCMD] Installation abgeschlossen"\nelse\n\
+    echo "[SteamCMD] Bereits installiert"\nfi\n\
+if [ ! -d /windrose/WindroseServer ]; then\n\
+    echo "[Windrose] Lade Windrose Server herunter (erstes Mal: 10-30 Min)..."\n\
+    /steamcmd/steamcmd.sh +force_install_dir /windrose +login anonymous +app_update 3041230 validate +quit\n\
+    echo "[Windrose] Download abgeschlossen"\nelse\n\
+    echo "[Windrose] Server bereits installiert"\nfi\n\
+' > /install-steamcmd.sh && chmod +x /install-steamcmd.sh
 
 # Start-Script
 RUN printf '#!/bin/bash\n\
-cd %s\n\
-./WindroseServer.sh \
+set -e\n\
+echo "[Windrose] Starte Server..."\n\
+cd /windrose\n\
+exec ./WindroseServer.sh \
     -ServerName="${SERVER_NAME:-Windrose Server}" \
     -Port="${SERVER_PORT:-7777}" \
     -QueryPort="${QUERY_PORT:-27015}" \
     -MaxPlayers="${MAX_PLAYERS:-16}" \
-    -savepath=%s/saved "$@"\n' "${SERVER_DIR}" "${SERVER_DIR}" > ${SERVER_DIR}/start.sh && \
-    chmod +x ${SERVER_DIR}/start.sh
+    -savepath=/windrose/saved "$@"\n\
+' > /windrose/start.sh && chmod +x /windrose/start.sh
 
 # Ports
 EXPOSE 7777/udp 27015/tcp
 
-WORKDIR ${SERVER_DIR}
+WORKDIR /
 
-CMD ["./start.sh"]
+# Zuerst installieren, dann starten
+CMD ["/bin/bash", "-c", "/install-steamcmd.sh && /windrose/start.sh"]
