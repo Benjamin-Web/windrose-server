@@ -6,32 +6,19 @@ FROM cm2network/steamcmd:latest
 LABEL maintainer="Benjamin"
 LABEL steam.app_id="3041230"
 
-# Windrose installieren (korrekter Pfad!)
-RUN /home/steam/steamcmd/steamcmd.sh \
-    +force_install_dir /windrose \
-    +login anonymous \
-    +app_update 3041230 \
-    validate \
-    +quit
+# KEINE Spieldownloads im Build! Das passiert zur Laufzeit.
 
-# Server-Verzeichnisse erstellen
-RUN mkdir -p /windrose/saved /windrose/logs && \
-    chmod -R 755 /windrose
+# Verzeichnisse erstellen
+RUN mkdir -p /windrose/saved /windrose/logs
+RUN chmod -R 755 /windrose
 
-# Start-Script erstellen
-RUN printf '#!/bin/bash\n\
-cd /windrose\n\
-exec ./WindroseServer.sh \
-    -ServerName="${SERVER_NAME:-Windrose Server}" \
-    -Port="${SERVER_PORT:-7777}" \
-    -QueryPort="${QUERY_PORT:-27015}" \
-    -MaxPlayers="${MAX_PLAYERS:-16}" \
-    -savepath=/windrose/saved "$@"\n' > /windrose/start.sh && \
-    chmod +x /windrose/start.sh
+# Spieldateien werden beim Start heruntergeladen/aktualisiert
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 # Ports
 EXPOSE 7777/udp 27015/tcp
 
 WORKDIR /windrose
 
-CMD ["/windrose/start.sh"]
+ENTRYPOINT ["/start.sh"]
