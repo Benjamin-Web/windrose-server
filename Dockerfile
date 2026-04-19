@@ -14,6 +14,7 @@ RUN dpkg --add-architecture i386 && \
     wine32 \
     wine64 \
     xvfb \
+    xauth \
     winbind \
     cabextract \
     wget \
