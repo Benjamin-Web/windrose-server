@@ -2,12 +2,12 @@ services:
   windrose-server:
     build: .
     image: windrose-server:latest
-    container_name: windrose-server
+    container_name: windrose
     restart: unless-stopped
     ports:
       - "7777:7777/udp"
       - "7778:7778/udp"
-      - "27015:27015"
+      - "27015:27015/udp"
     environment:
       - SERVER_NAME=${SERVER_NAME:-Windrose Server}
       - SERVER_PORT=${SERVER_PORT:-7777}

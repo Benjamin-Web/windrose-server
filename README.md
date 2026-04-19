@@ -1,133 +1,73 @@
-# Windrose Dedicated Server - Docker Setup
+# Windrose Dedicated Server - Docker + Wine Setup
 
-## 📋 Übersicht
+## ⚠️ Wichtig: Windows-Software auf Linux
 
-Dieses Setup nutzt Docker, aber **ohne automatischen SteamCMD-Download**.
-Die Spieldateien werden manuell per FTP hochgeladen.
-
-**Vorteile:**
-- ✅ Kein Steam Account nötig
-- ✅ Kein Steam Guard Problem
-- ✅ Download auf eigenem PC (schneller)
-
-**Nachteil:**
-- ❌ Manuelle Updates bei Patches
+Windrose Dedicated Server ist ein **Windows-Programm**. Wir nutzen **Wine** um es auf Linux auszuführen.
 
 ## 🚀 Schnellstart
 
-### 1. Repo klonen & bauen
-
 ```bash
+# 1. Repo klonen
 git clone https://github.com/Benjamin-Web/windrose-server.git
 cd windrose-server
-docker build -t windrose-server .
-```
 
-### 2. Spieldateien beschaffen
+# 2. Alte Daten löschen (falls vorhanden)
+rm -rf server-data/
 
-**Option A: Throwaway-Container (Empfohlen)**
+# 3. Docker Image bauen (dauert 5-15 Minuten wegen Wine)
+docker compose build --no-cache
 
-```bash
-cd ~/windrose-server
-docker run --rm -it -v $(pwd)/server-data:/data cm2network/steamcmd bash
-```
-
-**Dann im Container:**
-```bash
-./steamcmd.sh +force_install_dir /data +login DEIN_STEAM_USERNAME +app_update 3041230 validate +quit
-```
-
-> SteamCMD wird nach deinem Passwort und ggf. Steam Guard Code fragen.
-
-**Nach dem Download:**
-```bash
-exit
-```
-
-**Dann Rechte anpassen:**
-```bash
-sudo chown -R 1000:1000 server-data/
-```
-
----
-
-**Option B: Lokal auf Windows-PC**
-
-**Option B: Lokal auf Windows-PC**
-
-1. Steam Client öffnen
-2. "Tools" → "Dedicated Server" für Windrose suchen
-3. Download starten (oft unter `C:\Program Files\Steam\steamapps\common\`)
-4. Per FTP/SFTP die Dateien auf den Server in `~/windrose-server/server-data/` hochladen
-
-### 3. Rechte anpassen
-
-```bash
-# Im windrose-server Verzeichnis:
-sudo chown -R 1000:1000 server-data/
-```
-
-### 4. Server starten
-
-```bash
+# 4. Server starten (inkl. automatischer Download)
 docker compose up -d
+
+# 5. Logs beobachten
 docker compose logs -f
 ```
 
-## 📁 Verzeichnis-Struktur
-
-```
-windrose-server/
-├── server-data/          # <-- Hier kommen die Spieldateien rein
-│   ├── WindroseServer.sh  # <-- Die Start-Datei MUSS hier sein
-│   ├── Engine/
-│   ├── Game/
-│   └── ...
-├── logs/                 # Server-Logs
-├── docker-compose.yml
-├── Dockerfile
-└── start.sh
-```
-
 ## 🔧 Konfiguration
-
-### Environment Variablen (docker-compose.yml)
 
 | Variable | Standard | Beschreibung |
 |---|---|---|
 | `SERVER_NAME` | `Windrose Server` | Name in der Serverliste |
 | `SERVER_PORT` | `7777` | Game Port (UDP) |
-| `QUERY_PORT` | `27015` | Steam Query Port |
+| `QUERY_PORT` | `27015` | Query Port (UDP) |
 | `MAX_PLAYERS` | `16` | Max Spieler |
 
-### Ports
+## 📁 Verzeichnis-Struktur
 
-| Port | Protokoll | Beschreibung |
-|---|---|---|
-| `7777` | UDP | Haupt-Spielport |
-| `7778` | UDP | Raw Packet Port |
-| `27015` | TCP | Steam Query Port |
+```
+windrose-server/
+├── server-data/       # Spieldateien + Spielstände
+├── logs/              # Server-Logs
+├── Dockerfile
+├── docker-compose.yml
+├── start.sh
+└── README.md
+```
+
+## ⚡ Erster Start
+
+1. Docker Image wird gebaut (Wine wird installiert)
+2. SteamCMD lädt automatisch App 4129620 (Windows Server) herunter
+3. Server startet mit Wine + xvfb
+4. **Kann 10-20 Minuten dauern beim ersten Mal**
 
 ## 🔄 Updates
 
-Wenn Windrose patches veröffentlicht:
-
-1. Server stoppen: `docker compose down`
-2. Lokal neuen Server über Steam downloaden
-3. Per FTP alte Dateien in `server-data/` überschreiben
-4. Server starten: `docker compose up -d`
-
-## 💾 Daten-Persistenz
-
-Spielstände werden in `./server-data/saved` gespeichert.
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+docker compose logs -f
+```
 
 ## ❓ Bekannte Probleme
 
-**"Keine Spieldateien gefunden":**
-→ Spieldateien wurden nicht nach `server-data/` hochgeladen oder falscher Dateiname
+**Langsamer Build:** Wine Installation dauert 5-10 Minuten
 
-**Server nicht in Serverliste:**
-→ Firewall Ports 7777/udp und 27015/tcp prüfen
+**Server startet nicht:** Prüfe Logs mit `docker compose logs`
+
+**Wine-Fehler:** Manche Windows-Server funktionieren nicht 100% mit Wine
 
 ## 🛠️ Hilfreiche Befehle
 
@@ -136,4 +76,4 @@ Spielstände werden in `./server-data/saved` gespeichert.
 | `docker compose logs -f` | Live Logs |
 | `docker compose restart` | Neustart |
 | `docker compose down` | Stoppen |
-| `docker exec -it windrose-server bash` | Container betreten |
+| `docker exec -it windrose bash` | Container betreten |
