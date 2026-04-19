@@ -14,7 +14,7 @@ services:
       - QUERY_PORT=${QUERY_PORT:-27015}
       - MAX_PLAYERS=${MAX_PLAYERS:-16}
     volumes:
-      - ./server-data:/home/steam/windrose/saved
+      - ./server-data:/home/steam/windrose
       - ./logs:/home/steam/windrose/logs
     deploy:
       resources:
