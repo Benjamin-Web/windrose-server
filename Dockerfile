@@ -17,6 +17,7 @@ RUN dpkg --add-architecture i386 && \
     winbind \
     cabextract \
     wget \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. Winetricks installieren (für VC++ Runtimes etc.)
@@ -24,7 +25,7 @@ RUN wget -q -O /usr/local/bin/winetricks \
     https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && \
     chmod +x /usr/local/bin/winetricks
 
-# 4. Zurück zum sicheren Steam-User
+# 4. Zurück zum sicheren Steam-User für Wine-Init
 USER steam
 
 # 5. Wine initialisieren und VC++ Runtime installieren
@@ -34,9 +35,11 @@ RUN WINEDEBUG=-all wineboot --init 2>/dev/null && \
 # 6. Verzeichnisse erstellen
 RUN mkdir -p /home/steam/windrose /home/steam/logs
 
-# 7. Start-Skript kopieren und Rechte setzen
+# 7. Start-Skript und Entrypoint kopieren
+USER root
 COPY --chown=steam:steam start.sh /home/steam/start.sh
-RUN chmod +x /home/steam/start.sh
+COPY --chown=root:root entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /home/steam/start.sh /usr/local/bin/entrypoint.sh
 
 # 8. Arbeitsverzeichnis setzen
 WORKDIR /home/steam/windrose
@@ -44,5 +47,6 @@ WORKDIR /home/steam/windrose
 # 9. Ports (Game + Game+1 + Query)
 EXPOSE 7777/udp 7778/udp 27015/udp
 
-# 10. Startbefehl
+# 10. Entrypoint fixiert Berechtigungen, dann startet start.sh als steam
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/home/steam/start.sh"]
